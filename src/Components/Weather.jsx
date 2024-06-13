@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import search_icon from '../assets/search.png'
 import clear_icon from '../assets/clear.png'
 import cloud_icon from '../assets/cloud.png'
@@ -11,6 +11,7 @@ import './Weather.css'
 
 const Weather = () => {
 
+  const inputRef = useRef();
   const [weatherData,setWeatherData] = useState(false);
 
   const allicons = {
@@ -31,12 +32,22 @@ const Weather = () => {
 
   }
 
-  const search =async (city) =>{
+  const search = async (city) =>{
+    if(city === ""){
+      alert("Enter City Name")
+      return
+    }
     try{
-      const url =`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${import.meta.env.API_KEY}`;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${import.meta.env.VITE_API_KEY}`;
 
       const response = await fetch(url);
       const data = await response.json();
+
+      if(!response.ok){
+        alert(data.message);
+        return;
+      }
+
       console.log(data);
       const icon = allicons[data.weather[0].icon] || clear_icon
       
@@ -48,22 +59,24 @@ const Weather = () => {
         icon:icon
       })
     }catch(error){
-
+      setWeatherData(false)
+      console.error("Error in fetching weather data")
     }
   }
 
   useEffect(() => {
-    search("london");
+    search("BIHAR");
   },[])
 
   return (
     <div className='weather'>
         <div className='search-bar'>
-        <input type='text' placeholder='Search'/>
-        <img src={search_icon} alt=''/>
+        <input ref={inputRef} type='text' placeholder='Search'/>
+        <img src={search_icon} alt='' onClick={() => search(inputRef.current.value)}/>
         </div>
-        <img src={weatherData.icon} alt='' className='weather-icon'/>
-        <p className='temperature'>{weatherData.temprature}°c</p>
+        {weatherData ?<>
+          <img src={weatherData.icon} alt='' className='weather-icon'/>
+        <p className='temperature'>{weatherData.temperature}°c</p>
         <p className='location'>{weatherData.location}</p>
         <div className='weather-data'>
         <div className='col'>
@@ -81,6 +94,8 @@ const Weather = () => {
         </div>
         </div>
         </div>
+        </>:<></>}
+        
         </div>
   )
 }
